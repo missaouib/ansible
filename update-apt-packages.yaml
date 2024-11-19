@@ -5,8 +5,10 @@
     - name: Update apt cache
       apt:
         update_cache: yes
+        lock_timeout: 120
 
     - name: Upgrade all packages
       apt:
         upgrade: dist
         state: latest
+        lock_timeout: 120
