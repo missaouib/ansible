@@ -1,0 +1,12 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Ensure system is up-to-date
+      apt:
+        update_cache: yes
+        upgrade: dist
+    - name: Reboot if kernel updated
+      reboot:
+        msg: "Rebooting after updates"
+        timeout: 300
