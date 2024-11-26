@@ -1,12 +1,27 @@
 ---
-- hosts: all
-  become: true
+- name: Check and reboot for pending kernel updates
+  hosts: all
+  become: yes
   tasks:
-    - name: Ensure system is up-to-date
-      apt:
-        update_cache: yes
-        upgrade: dist
-    - name: Reboot if kernel updated
+    - name: Check for pending kernel update
+      shell: >
+        if [ -f /var/run/reboot-required ]; then
+          echo "true";
+        else
+          echo "false";
+        fi
+      register: kernel_update_required
+      changed_when: false
+
+    - name: Debug kernel update requirement
+      debug:
+        msg: "Kernel update required: {{ kernel_update_required.stdout }}"
+
+    - name: Reboot the machine if kernel update is required
       reboot:
-        msg: "Rebooting after updates"
-        timeout: 300
+        msg: "Rebooting for kernel update"
+        connect_timeout: 5
+        reboot_timeout: 600
+        pre_reboot_delay: 5
+        post_reboot_delay: 10
+      when: kernel_update_required.stdout == "true"
