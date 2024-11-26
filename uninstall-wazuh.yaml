@@ -1,0 +1,49 @@
+---
+- name: Uninstall Wazuh
+  hosts: all
+  become: yes
+  vars:
+    wazuh_directories:
+      - /var/ossec
+      - /etc/ossec
+      - /var/log/ossec
+    wazuh_packages:
+      - wazuh-agent
+      - wazuh-manager
+      - wazuh-api
+  tasks:
+    - name: Stop Wazuh services
+      service:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - wazuh-agent
+        - wazuh-manager
+      ignore_errors: yes  # Ignore if the service is not installed
+
+    - name: Uninstall Wazuh packages
+      package:
+        name: "{{ wazuh_packages }}"
+        state: absent
+      ignore_errors: yes  # Ignore if the package is not installed
+
+    - name: Remove Wazuh directories
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ wazuh_directories }}"
+
+    - name: Remove Wazuh configuration files
+      file:
+        path: /etc/ossec-init.conf
+        state: absent
+      ignore_errors: yes
+
+    - name: Verify Wazuh removal
+      shell: "dpkg -l | grep wazuh || echo 'Wazuh removed'"
+      register: removal_check
+      changed_when: false
+
+    - name: Display removal status
+      debug:
+        msg: "{{ removal_check.stdout }}"
