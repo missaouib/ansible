@@ -1,0 +1,59 @@
+---
+- name: System Reporting and Email Notification
+  hosts: all
+  become: yes
+  vars:
+    email_recipient: kolton@corr.cloud
+    email_sender: noreply@corr.cloud
+    mail_server: mail.corr.cloud
+  tasks:
+    - name: Gather system facts
+      setup:
+
+    - name: Collect disk usage
+      command: df -h
+      register: disk_usage
+
+    - name: Collect memory usage
+      command: free -h
+      register: memory_usage
+
+    - name: Collect uptime
+      command: uptime
+      register: system_uptime
+
+    - name: Collect running processes
+      command: ps aux --sort=-%mem | head -10
+      register: top_processes
+
+    - name: Prepare email body
+      set_fact:
+        email_body: |
+          System Report for {{ ansible_hostname }}
+          ====================================
+          Hostname: {{ ansible_hostname }}
+          OS: {{ ansible_distribution }} {{ ansible_distribution_version }}
+          Kernel: {{ ansible_kernel }}
+          CPU: {{ ansible_processor[1] }}
+          Memory: {{ ansible_memtotal_mb }} MB
+          ====================================
+          Disk Usage:
+          {{ disk_usage.stdout }}
+          ====================================
+          Memory Usage:
+          {{ memory_usage.stdout }}
+          ====================================
+          Uptime:
+          {{ system_uptime.stdout }}
+          ====================================
+          Top Processes:
+          {{ top_processes.stdout }}
+
+    - name: Send system report via email
+      mail:
+        host: "{{ mail_server }}"
+        port: 25
+        to: "{{ email_recipient }}"
+        from: "{{ email_sender }}"
+        subject: "System Report for {{ ansible_hostname }}"
+        body: "{{ email_body }}"
