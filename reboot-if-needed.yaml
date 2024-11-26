@@ -2,6 +2,10 @@
 - name: Check and reboot for pending kernel updates
   hosts: all
   become: yes
+  vars:
+    email_recipient: kolton@corr.cloud
+    email_sender: noreply@corr.cloud
+    mail_server: mail.corr.cloud
   tasks:
     - name: Check for pending kernel update
       shell: >
@@ -25,3 +29,22 @@
         pre_reboot_delay: 5
         post_reboot_delay: 10
       when: kernel_update_required.stdout == "true"
+      register: reboot_status
+      changed_when: kernel_update_required.stdout == "true"
+
+    - name: Collect list of rebooted hosts
+      set_fact:
+        rebooted_hosts: "{{ rebooted_hosts | default([]) + [inventory_hostname] }}"
+      when: kernel_update_required.stdout == "true"
+
+    - name: Send email notification if any servers were rebooted
+      mail:
+        host: "{{ mail_server }}"
+        port: 25
+        to: "{{ email_recipient }}"
+        from: "{{ email_sender }}"
+        subject: "Reboot Notification: Servers Rebooted"
+        body: >
+          The following servers were rebooted due to a pending kernel update:
+          {{ rebooted_hosts | join(', ') }}
+      when: rebooted_hosts is defined
