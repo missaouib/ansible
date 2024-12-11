@@ -1,0 +1,71 @@
+---
+- name: Install Wazuh Agent
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Add Wazuh repository GPG key
+      ansible.builtin.command:
+        cmd: wget -qO - https://packages.wazuh.com/key/GPG-KEY-WAZUH | apt-key add -
+      when: ansible_os_family == "Debian"
+
+    - name: Add Wazuh repository
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/wazuh.list
+        content: |
+          deb https://packages.wazuh.com/4.x/apt/ stable main
+      when: ansible_os_family == "Debian"
+
+    - name: Update APT cache
+      ansible.builtin.apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Wazuh agent
+      ansible.builtin.apt:
+        name: wazuh-agent
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Add Wazuh repository GPG key
+      ansible.builtin.command:
+        cmd: rpm --import https://packages.wazuh.com/key/GPG-KEY-WAZUH
+      args:
+        creates: /etc/pki/rpm-gpg/GPG-KEY-WAZUH
+      when: ansible_os_family == "RedHat"
+
+    - name: Add Wazuh repository
+      ansible.builtin.copy:
+        dest: /etc/yum.repos.d/wazuh.repo
+        content: |
+          [wazuh]
+          name=Wazuh repository
+          baseurl=https://packages.wazuh.com/4.x/yum/
+          gpgcheck=1
+          gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
+          enabled=1
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Wazuh agent
+      ansible.builtin.yum:
+        name: wazuh-agent
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Enable and start Wazuh agent
+      ansible.builtin.systemd:
+        name: wazuh-agent
+        enabled: yes
+        state: started
+
+    - name: Configure Wazuh agent
+      ansible.builtin.lineinfile:
+        path: /var/ossec/etc/ossec.conf
+        regexp: '<server>.*</server>'
+        line: '<server>10.0.10.16</server>'
+        backup: yes
+
+    - name: Restart Wazuh agent
+      ansible.builtin.systemd:
+        name: wazuh-agent
+        state: restarted
