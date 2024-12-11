@@ -58,13 +58,6 @@
         state: present
       when: ansible_os_family == "RedHat"
 
-    - name: Remove old Wazuh agent address line
-      ansible.builtin.lineinfile:
-        path: /var/ossec/etc/ossec.conf
-        regexp: '<address>.*</address>'
-        state: absent
-        backup: yes
-
     - name: Configure Wazuh agent address
       ansible.builtin.lineinfile:
         path: /var/ossec/etc/ossec.conf
