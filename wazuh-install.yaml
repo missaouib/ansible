@@ -4,9 +4,15 @@
   become: yes
 
   tasks:
+    - name: Download Wazuh repository GPG key
+      ansible.builtin.get_url:
+        url: https://packages.wazuh.com/key/GPG-KEY-WAZUH
+        dest: /tmp/GPG-KEY-WAZUH
+      when: ansible_os_family == "Debian"
+
     - name: Add Wazuh repository GPG key
       ansible.builtin.command:
-        cmd: wget -qO - https://packages.wazuh.com/key/GPG-KEY-WAZUH | apt-key add -
+        cmd: apt-key add /tmp/GPG-KEY-WAZUH
       when: ansible_os_family == "Debian"
 
     - name: Add Wazuh repository
@@ -27,14 +33,14 @@
         state: present
       when: ansible_os_family == "Debian"
 
-    - name: Add Wazuh repository GPG key
+    - name: Add Wazuh repository GPG key (RedHat)
       ansible.builtin.command:
         cmd: rpm --import https://packages.wazuh.com/key/GPG-KEY-WAZUH
       args:
         creates: /etc/pki/rpm-gpg/GPG-KEY-WAZUH
       when: ansible_os_family == "RedHat"
 
-    - name: Add Wazuh repository
+    - name: Add Wazuh repository (RedHat)
       ansible.builtin.copy:
         dest: /etc/yum.repos.d/wazuh.repo
         content: |
@@ -46,7 +52,7 @@
           enabled=1
       when: ansible_os_family == "RedHat"
 
-    - name: Install Wazuh agent
+    - name: Install Wazuh agent (RedHat)
       ansible.builtin.yum:
         name: wazuh-agent
         state: present
