@@ -58,11 +58,18 @@
         state: present
       when: ansible_os_family == "RedHat"
 
-    - name: Configure Wazuh agent
+    - name: Remove old Wazuh agent address line
       ansible.builtin.lineinfile:
         path: /var/ossec/etc/ossec.conf
         regexp: '<server>.*</server>'
-        line: '<server>your_wazuh_manager_ip</server>'
+        state: absent
+        backup: yes
+
+    - name: Configure Wazuh agent address
+      ansible.builtin.lineinfile:
+        path: /var/ossec/etc/ossec.conf
+        regexp: '<address>.*</address>'
+        line: '<address>10.0.10.16</address>'
         backup: yes
 
     - name: Enable and start Wazuh agent
