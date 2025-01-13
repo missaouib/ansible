@@ -1,5 +1,5 @@
 - name: Restart and check Wazuh service
-  hosts: wazuh_manager  # Replace with the appropriate host group
+  hosts: all  # Replace with the appropriate host group
   become: yes
   tasks:
     - name: Restart Wazuh service
