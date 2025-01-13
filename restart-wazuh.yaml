@@ -1,28 +1,28 @@
-- name: Restart and check Wazuh service
+- name: Restart and check Wazuh agent service
   hosts: all  # Replace with the appropriate host group
   become: yes
   tasks:
-    - name: Restart Wazuh service
+    - name: Restart Wazuh agent service
       ansible.builtin.service:
-        name: wazuh-manager
+        name: wazuh-agent
         state: restarted
 
-    - name: Wait for service to initialize
+    - name: Wait for Wazuh agent to initialize
       ansible.builtin.wait_for:
         timeout: 10  # Wait up to 10 seconds
 
-    - name: Ensure Wazuh service is running
+    - name: Ensure Wazuh agent service is running
       ansible.builtin.service:
-        name: wazuh-manager
+        name: wazuh-agent
         state: started
         enabled: yes
 
-    - name: Check Wazuh service status
+    - name: Check Wazuh agent service status
       ansible.builtin.command:
-        cmd: systemctl status wazuh-manager
-      register: wazuh_status
+        cmd: systemctl status wazuh-agent
+      register: wazuh_agent_status
       ignore_errors: yes
 
-    - name: Output Wazuh service status
+    - name: Output Wazuh agent service status
       ansible.builtin.debug:
-        msg: "{{ wazuh_status.stdout_lines }}"
+        msg: "{{ wazuh_agent_status.stdout_lines }}"
