@@ -1,4 +1,4 @@
-- hosts: wazuh_agents  # Replace with the correct group of Wazuh agent hosts
+- hosts: all  # Replace with the correct group of Wazuh agent hosts
   become: true
   tasks:
     # 1. Update apt cache
