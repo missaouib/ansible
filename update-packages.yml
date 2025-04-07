@@ -1,0 +1,19 @@
+- hosts: all
+  become: true
+  tasks:
+    # 1. Accept repository changes explicitly
+    - name: Accept repository changes explicitly
+      shell: apt-get update --allow-releaseinfo-change
+      ignore_errors: yes
+
+    # 2. Check for GPG key error
+    - name: Check for GPG key error during apt update
+      shell: apt-get update
+      register: apt_update_result
+      ignore_errors: yes
+
+    # 4. Update apt cache
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        lock_timeout: 120
