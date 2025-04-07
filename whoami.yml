@@ -1,7 +1,12 @@
-- name: Who am I (check effective user)
-  command: whoami
-  register: whoami_result
-
-- name: Print whoami result
-  debug:
-    var: whoami_result.stdout
+---
+ - name: Who am I (check effective user)
+   hosts: all
+   become: true
+   tasks: 
+      - name: Who am I (check effective user)
+        command: whoami
+        register: whoami_result
+      
+      - name: Print whoami result
+        debug:
+          var: whoami_result.stdout
